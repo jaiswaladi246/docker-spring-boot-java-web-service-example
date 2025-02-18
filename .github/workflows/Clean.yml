@@ -53,19 +53,19 @@ jobs:
           committer: ${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}">
           author: ${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}">
           body: "This is to show automatic PR creation"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.LONDI }}
 
       # Step 8: Approve Pull Request
       - name: Approve Pull Request
         uses: juliangruber/approve-pull-request-action@v1
         with:
-          github-token: ${{ secrets.SONNER_TOKEN}}
+          github-token: ${{ secrets.LONDI}}
           number: ${{ steps.demo-1.outputs.pull-request-number}}
 
       # Step 9: Merge Pull Request
       - name: Merge Pull Request
         uses: juliangruber/merge-pull-request-action@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.LONDI}}
           number: ${{ steps.demo-1.outputs.pull-request-number}
           method: squash
