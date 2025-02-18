@@ -1,31 +1,74 @@
-name: Clean and Test Spring Boot Project
+name: CI with Checkstyle
 
 on:
   push:
     branches:
-      - main
       - develop
   pull_request:
     branches:
       - main
-      - develop
 
 jobs:
-  clean_and_test:
+  build-and-check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Set Up JDK 17
-        uses: actions/setup-java@v3
+      # Step 2: Set up JDK 21 (Fixed Distribution)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v2
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: '21'
+          distribution: 'temurin'  # Fixed: 'adoptopenjdk' is no longer supported
 
-      - name: Clean Project
-        run: mvn clean
+      # Step 3: Extract git commit data
+      - name: Extract git commit data
+        uses: rlespinasse/git-commit-data-action@v1.x
 
-      - name: Run Unit Tests
+      # Step 4: Build with Maven
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
+
+      # Step 5: JUnit tests
+      - name: JUnit tests
         run: mvn test
+
+      # Step 6: Download and run Checkstyle
+      - name: Download and run Checkstyle
+        run: |
+          # Download Checkstyle JAR
+          wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.45/checkstyle-8.45-all.jar -O checkstyle.jar
+          
+          # Run Checkstyle on the Java files in the repository
+          java -jar checkstyle.jar -c /google_checks.xml $(find . -name "*.java")
+
+      # Step 7: Raise PR to merge feature branch into main
+      - name: Raise PR to merge feature branch into main
+        id: create_pr
+        uses: peter-evans/create-pull-request@v3
+        with:
+          branch: "develop"
+          base: main
+          title: "Merging feature branch into main"
+          committer: "${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}>"
+          author: "${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}>"
+          body: "This is an automated PR to merge the feature branch into main after tests passed."
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 8: Approve Pull Request using SONAR_TOKEN instead of APPROVER_DEMO
+      - name: Approve Pull Request
+        uses: juliangruber/approve-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.SONAR_TOKEN }}
+          number: ${{ steps.create_pr.outputs.pull-request-number }}
+
+      # Step 9: Merge Pull Request
+      - name: Merge Pull request
+        uses: juliangruber/merge-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ steps.create_pr.outputs.pull-request-number }}
+          method: squash
