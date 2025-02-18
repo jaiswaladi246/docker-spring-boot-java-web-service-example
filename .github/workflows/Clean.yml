@@ -1,28 +1,28 @@
-
 name: CI with Checkstyle
 
 on:
   push:
     branches:
       - main
+
 jobs:
   build-and-check:
     runs-on: ubuntu-latest
-
     steps:
       # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up JDK 21 (Fixed Distribution)
+      # Step 2: Set up JDK 21
       - name: Set up JDK 21
         uses: actions/setup-java@v2
         with:
           java-version: '21'
-          distribution: 'temurin'  # Fixed: 'adoptopenjdk' is no longer supported
+          distribution: 'temurin'
 
       # Step 3: Extract git commit data
       - name: Extract git commit data
+        id: git-data
         uses: rlespinasse/git-commit-data-action@v1.x
 
       # Step 4: Build with Maven
@@ -38,34 +38,36 @@ jobs:
         run: |
           # Download Checkstyle JAR
           wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.45/checkstyle-8.45-all.jar -O checkstyle.jar
-          
+
           # Run Checkstyle on the Java files in the repository
-          java -jar checkstyle.jar -c /google_checks.xml $(find . -name "*.java")
+          java -jar checkstyle.jar -c ./google_checks.xml $(find . -name "*.java")
 
       # Step 7: Raise PR
       - name: Raise PR
-        id: demo-1
+        id: create-pr
         uses: peter-evans/create-pull-request@v3
         with:
-          branch: "develop"
+          branch: develop
           base: main
           title: "demo for auto pr"
-          committer: ${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}">
-          author: ${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}">
+          committer: ${{ steps.git-data.outputs.author-name }} <${{ steps.git-data.outputs.author-email }}>
+          author: ${{ steps.git-data.outputs.author-name }} <${{ steps.git-data.outputs.author-email }}>
           body: "This is to show automatic PR creation"
           token: ${{ secrets.LONDI }}
 
       # Step 8: Approve Pull Request
       - name: Approve Pull Request
+        if: steps.create-pr.outputs.pull-request-number != ''
         uses: juliangruber/approve-pull-request-action@v1
         with:
-          github-token: ${{ secrets.LONDI}}
-          number: ${{ steps.demo-1.outputs.pull-request-number}}
+          github-token: ${{ secrets.LONDI }}
+          number: ${{ steps.create-pr.outputs.pull-request-number }}
 
       # Step 9: Merge Pull Request
       - name: Merge Pull Request
+        if: steps.create-pr.outputs.pull-request-number != ''
         uses: juliangruber/merge-pull-request-action@v1
         with:
-          github-token: ${{ secrets.LONDI}}
-          number: ${{ steps.demo-1.outputs.pull-request-number}
+          github-token: ${{ secrets.LONDI }}
+          number: ${{ steps.create-pr.outputs.pull-request-number }}
           method: squash
