@@ -45,30 +45,30 @@ jobs:
           # Run Checkstyle on the Java files in the repository
           java -jar checkstyle.jar -c /google_checks.xml $(find . -name "*.java")
 
-      # Step 7: Raise PR to merge feature branch into main
-      - name: Raise PR to merge feature branch into main
-        id: create_pr
+      # Step 7: Raise PR
+      - name: Raise PR
+        id: demo-1
         uses: peter-evans/create-pull-request@v3
         with:
           branch: "develop"
           base: main
-          title: "Merging feature branch into main"
-          committer: "${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}>"
-          author: "${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}>"
-          body: "This is an automated PR to merge the feature branch into main after tests passed."
+          title: "demo for auto pr"
+          committer: ${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}">
+          author: ${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}">
+          body: "This is to show automatic PR creation"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 8: Approve Pull Request using SONAR_TOKEN instead of APPROVER_DEMO
+      # Step 8: Approve Pull Request
       - name: Approve Pull Request
         uses: juliangruber/approve-pull-request-action@v1
         with:
-          github-token: ${{ secrets.SONAR_TOKEN }}
-          number: ${{ steps.create_pr.outputs.pull-request-number }}
+          github-token: ${{ secrets.SONNER_TOKEN}}
+          number: ${{ steps.demo-1.outputs.pull-request-number }}
 
       # Step 9: Merge Pull Request
-      - name: Merge Pull request
+      - name: Merge Pull Request
         uses: juliangruber/merge-pull-request-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          number: ${{ steps.create_pr.outputs.pull-request-number }}
+          number: ${{ steps.demo-1.outputs.pull-request-number }}
           method: squash
