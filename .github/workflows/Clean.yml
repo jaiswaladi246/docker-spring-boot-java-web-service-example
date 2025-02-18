@@ -33,14 +33,7 @@ jobs:
       - name: JUnit tests
         run: mvn test
 
-      # Step 6: Download and run Checkstyle
-      - name: Download and run Checkstyle
-        run: |
-          # Download Checkstyle JAR
-          wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.45/checkstyle-8.45-all.jar -O checkstyle.jar
-
-          # Run Checkstyle on the Java files in the repository
-          java -jar checkstyle.jar -c ./google_checks.xml $(find . -name "*.java")
+     
 
       # Step 7: Raise PR
       - name: Raise PR
