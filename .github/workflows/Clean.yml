@@ -60,12 +60,12 @@ jobs:
         uses: juliangruber/approve-pull-request-action@v1
         with:
           github-token: ${{ secrets.SONNER_TOKEN}}
-          number: ${{ steps.demo-1.outputs.pull-request-number }}
+          number: ${{ steps.demo-1.outputs.pull-request-number}}
 
       # Step 9: Merge Pull Request
       - name: Merge Pull Request
         uses: juliangruber/merge-pull-request-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          number: ${{ steps.demo-1.outputs.pull-request-number }}
+          number: ${{ steps.demo-1.outputs.pull-request-number}
           method: squash
