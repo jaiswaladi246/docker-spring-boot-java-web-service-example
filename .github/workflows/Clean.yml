@@ -1,1 +1,75 @@
 
+name: CI with Checkstyle
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - main 
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Set up JDK 21 (Fixed Distribution)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v2
+        with:
+          java-version: '21'
+          distribution: 'temurin'  # Fixed: 'adoptopenjdk' is no longer supported
+
+      # Step 3: Extract git commit data
+      - name: Extract git commit data
+        uses: rlespinasse/git-commit-data-action@v1.x
+
+      # Step 4: Build with Maven
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
+
+      # Step 5: JUnit tests
+      - name: JUnit tests
+        run: mvn test
+
+      # Step 6: Download and run Checkstyle
+      - name: Download and run Checkstyle
+        run: |
+          # Download Checkstyle JAR
+          wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.45/checkstyle-8.45-all.jar -O checkstyle.jar
+          
+          # Run Checkstyle on the Java files in the repository
+          java -jar checkstyle.jar -c /google_checks.xml $(find . -name "*.java")
+
+      # Step 7: Raise PR
+      - name: Raise PR
+        id: demo-1
+        uses: peter-evans/create-pull-request@v3
+        with:
+          branch: "develop"
+          base: main
+          title: "demo for auto pr"
+          committer: ${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}">
+          author: ${{ env.GIT_COMMIT_AUTHOR_NAME }} <${{ env.GIT_COMMIT_AUTHOR_EMAIL }}">
+          body: "This is to show automatic PR creation"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 8: Approve Pull Request
+      - name: Approve Pull Request
+        uses: juliangruber/approve-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.SONNER_TOKEN}}
+          number: ${{ steps.demo-1.outputs.pull-request-number }}
+
+      # Step 9: Merge Pull Request
+      - name: Merge Pull Request
+        uses: juliangruber/merge-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ steps.demo-1.outputs.pull-request-number }}
+          method: squash
