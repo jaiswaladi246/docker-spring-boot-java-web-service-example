@@ -4,11 +4,7 @@ name: CI with Checkstyle
 on:
   push:
     branches:
-      - develop
-  pull_request:
-    branches:
-      - main 
-
+      - main
 jobs:
   build-and-check:
     runs-on: ubuntu-latest
