@@ -3,7 +3,7 @@ name: CI with Checkstyle
 on:
   push:
     branches:
-      - main
+      - develop
 
 jobs:
   build-and-check:
